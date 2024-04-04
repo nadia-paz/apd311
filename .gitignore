@@ -1,1 +1,8 @@
+*terraform*
+*credentials*
+
 *.json
+*.txt
+
+# Exceptions
+!terraform/

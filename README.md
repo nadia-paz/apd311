@@ -103,6 +103,9 @@ To use Google Cloud SDK, Terraform you need to provide the access to your Google
     * Service Account Token Creator
     * Owner
 
+    -
+    Compute Engine API
+
 5. Click on the name of the service account and move to keys. Create a `*.json` file with a key, download it and store in the secure location.
 6. To add the environment variable with your credentials run in the terminal:
 ```bash

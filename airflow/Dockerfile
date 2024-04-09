@@ -3,18 +3,19 @@ FROM apache/airflow:2.8.2
 ENV AIRFLOW_HOME=/opt/airflow
 
 USER root
+
 RUN apt-get update -qq && apt-get install vim -qqq
 # git gcc g++ -qqq
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Ref: https://airflow.apache.org/docs/docker-stack/recipes.html
+# ARG BASE_AIRFLOW_IMAGE
+# FROM ${BASE_AIRFLOW_IMAGE}
 
 SHELL ["/bin/bash", "-o", "pipefail", "-e", "-u", "-x", "-c"]
 
+# USER 0
+
 ARG CLOUD_SDK_VERSION=322.0.0
-ENV GCLOUD_HOME=/home/google-cloud-sdk
+ENV GCLOUD_HOME=/opt/google-cloud-sdk
 
 ENV PATH="${GCLOUD_HOME}/bin/:${PATH}"
 
@@ -27,13 +28,21 @@ RUN DOWNLOAD_URL="https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/goo
        --bash-completion=false \
        --path-update=false \
        --usage-reporting=false \
+       --additional-components alpha beta kubectl \
        --quiet \
     && rm -rf "${TMP_DIR}" \
+    && rm -rf "${GCLOUD_HOME}/.install/.backup/" \
     && gcloud --version
 
 WORKDIR $AIRFLOW_HOME
 
-COPY scripts scripts
-RUN chmod +x scripts
+# COPY scripts scripts
+# RUN chmod +x scripts
 
 USER $AIRFLOW_UID
+# USER airflow
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+# RUN pip3 install pgcli --only-binary psycopg2
+
+# USER ${AIRFLOW_UID}

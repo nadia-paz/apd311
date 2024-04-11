@@ -85,9 +85,9 @@ To use Google Cloud SDK, Terraform you need to provide the access to your Google
     * [IAM Service Account Credentials API](https://console.cloud.google.com/apis/library/iamcredentials.googleapis.com)
     Compute Engine API
 * Cloud Dataproc API
-* Cloud Dataproc Control API
 * BigQuery API
 * Bigquery Storage API
+
 3. Navigate to __IAM & Admin__ -> Service Accounts.
 4. Create a new service account for the project. Make sure to add the following roles into it:
     * BigQuery Admin

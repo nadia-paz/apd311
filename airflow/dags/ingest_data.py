@@ -24,27 +24,24 @@ from airflow.providers.google.cloud.operators.bigquery import BigQueryCreateExte
 
 #### VARS ###
 
-project_id = os.environ.get("GCP_PROJECT_ID")
-bucket_name = os.environ.get("GCP_GCS_BUCKET")
+# project_id = os.environ.get("GCP_PROJECT_ID")
+# bucket_name = os.environ.get("GCP_GCS_BUCKET")
 
-cr = "~/.gc/apd311.json"
+#cr = "~/.gc/apd311.json"
 #  os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = "~/.gc/apd311.json"
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = cr
+cr = os.environ['GOOGLE_APPLICATION_CREDENTIALS']
 # bucket_name = os.environ['GCP_GCS_BUCKET']
 # project_id = os.environ['GCP_PROJECT_ID']
-# project_id = 'apd311'
-# bucket_name = 'apd311'
+project_id = 'apd311'
+bucket_name = 'apd311'
 pq_file = 'apd311_row.parquet'
-table_name = "row"
+#table_name = "row"
+path_to_local_home = os.environ.get("AIRFLOW_HOME", "/opt/airflow/")
 
-# root_path = f'{bucket_name}/{table_name}'
-
-###############
-
-def get_json(offset=1, limit = 10_000):
+def get_json(ti, offset=1, limit = 100_000):
     while True:
         url = 'https://data.austintexas.gov/resource/xwdj-i9he.json'
-
+        
         params = {
             "$limit": limit,
             "$offset": offset
@@ -60,6 +57,8 @@ def get_json(offset=1, limit = 10_000):
         if data_json:
             yield data_json
             if len(data_json) < limit:
+                print('Exit from len(data) with offset', offset)
+                ti.xcom_push(key='offset', value=offset)
                 break
             else:
                 offset += limit
@@ -67,7 +66,6 @@ def get_json(offset=1, limit = 10_000):
         else:
             # No more data, break the loop
             break
-
 
 def preprocess_data(data_json):
     """ 
@@ -81,12 +79,18 @@ def preprocess_data(data_json):
     py_table = pa.Table.from_pylist(data_json)
     # drop not needed columns
     py_table = py_table.drop_columns([
-        'sr_location',
-        'sr_location_lat_long', 
-        'sr_location_map_tile', 
-        'sr_location_map_page',
-        'sr_location_street_number',
-        'sr_location_street_name'])
+            'sr_location',
+            # 'sr_location_council_district',
+            'sr_location_lat_long', 
+            'sr_location_map_tile', 
+            'sr_location_map_page',
+            # 'sr_location_street_number',
+            'sr_location_street_name'])
+    if 'sr_location_street_number' in py_table.column_names:
+        py_table = py_table.drop_columns('sr_location_street_number')
+    if 'sr_location_council_district' in py_table.column_names:
+        py_table = py_table.drop_columns('sr_location_council_district')
+    
         
     # rename columns, remove sr_ prefix
     cols = py_table.column_names
@@ -96,7 +100,7 @@ def preprocess_data(data_json):
     # sort columns by type and info
     request_info = ['request_id', 'status_desc', 'type_desc', 'method_received_desc']
     date_info = ['created_date', 'status_date', 'updated_date']
-    address_info = ['location_county', 'location_city', 'location_council_district', 'location_zip_code']
+    address_info = ['location_county', 'location_city', 'location_zip_code']
     gis_info = ['location_x', 'location_y', 'location_lat', 'location_long']
 
     # cast date 
@@ -115,16 +119,6 @@ def preprocess_data(data_json):
     new_order = request_info + date_info + address_info + gis_info
     return py_table.select(new_order)
 
-def save_data(offset=1, limit = 10_000):
-    # extract
-    data = []
-    for j in get_json(offset, limit):
-        data = [*data, *j]
-    # preprocess
-    table = preprocess_data(data)
-    # write to local file
-    pq.write(table, pq_file)
-    
 def upload_to_gcs(bucket_name, object_name, pq_file):
     """
     Ref: https://cloud.google.com/storage/docs/uploading-objects#storage-upload-object-python
@@ -145,44 +139,37 @@ def upload_to_gcs(bucket_name, object_name, pq_file):
     blob = bucket.blob(object_name)
     blob.upload_from_filename(pq_file)
 
-def export_data(pq_file, *args, **kwargs):
-    """
-    Exports data to some source.
+def save_data(ti, offset=1, limit = 100_000):
+    # extract
+    n = 1
+    for data in get_json(ti, offset, limit):
+        
+        #data = [*data, *j]
+        # preprocess
+        table = preprocess_data(data)
+        #table = pa.Table.from_pylist(data)
+        # write to local file
+        filename = f'data_{n:02d}.parquet'
+        object_name = f"raw/{filename}"
+        local_file = f"{path_to_local_home}/{filename}"
+        # save table into a file
+        pq.write_table(table, local_file)
+        # upload to gcs
 
-    Args:
-        data: The output from the upstream parent block
-        args: The output from any additional upstream blocks (if applicable)
-
-    Output (optional):
-        Optionally return any object and it'll be logged and
-        displayed when inspecting the block run.
-    """
-    # # get date in string format
-    # data['tpep_pickup_date'] = data['tpep_pickup_datetime'].dt.date
-
-    # create a pyarrow table
-    #table = pa.Table.from_pandas(data)
-
-    gcs = pa.fs.GcsFileSystem()
-
-    pq.write_to_dataset(
-        py_table,
-        root_path=root_path,
-        #partition_cols=['created_date'],
-        filesystem=gcs
-    )
-
-###### DAGS ####
+        upload_to_gcs(bucket_name, object_name, local_file)
+        os.remove(local_file)
+        n += 1
 
 default_args = {
     'owner': 'airflow',
-    'retries': 1,
-    'retry_delay': timedelta(minutes=1)
+    'retries': 0
+    # 'retry_delay': timedelta(minutes=1)
 }
 # scheduler cron notation
 # Minute Hour Day(month) Month Day(week)
+
 with DAG(
-    dag_id='ETL_v01',
+    dag_id='ETL_v07',
     default_args=default_args,
     start_date=datetime(2024, 4, 10),
     # every Sunday at 00:00
@@ -198,15 +185,3 @@ with DAG(
             "limit": 100_000
         }
     )
-    upload_to_gcs_task = PythonOperator(
-        task_id = 'upload_to_gcs_task',
-        python_callable = upload_to_gcs,
-        op_kwargs = {
-            # bucket_name, table_name, pq_file
-            "bucket_name": bucket_name,
-            "object_name": f'raw/{pq_file}',
-            "pq_file": pq_file
-        }
-    )
-
-    save_data_task >> upload_to_gcs_task

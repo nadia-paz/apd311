@@ -162,8 +162,8 @@ def save_data(ti, offset=1, limit = 100_000):
 
 default_args = {
     'owner': 'airflow',
-    'retries': 0
-    # 'retry_delay': timedelta(minutes=1)
+    'retries': 2,
+    'retry_delay': timedelta(minutes=10)
 }
 # scheduler cron notation
 # Minute Hour Day(month) Month Day(week)

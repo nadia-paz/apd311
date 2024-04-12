@@ -4,11 +4,18 @@ ENV AIRFLOW_HOME=/opt/airflow
 
 USER root
 
-RUN apt-get update -qq && apt-get install vim -qqq
-# git gcc g++ -qqq
+# from
+# https://airflow.apache.org/docs/docker-stack/build.html#example-of-adding-airflow-provider-package-and-apt-package
+RUN apt-get update \
+  && apt-get install vim -qqq \
+  && apt-get install -y --no-install-recommends \
+         openjdk-17-jre-headless \
+  && apt-get autoremove -yqq --purge \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
 
-# ARG BASE_AIRFLOW_IMAGE
-# FROM ${BASE_AIRFLOW_IMAGE}
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+RUN export JAVA_HOME
 
 SHELL ["/bin/bash", "-o", "pipefail", "-e", "-u", "-x", "-c"]
 
@@ -36,13 +43,8 @@ RUN DOWNLOAD_URL="https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/goo
 
 WORKDIR $AIRFLOW_HOME
 
-# COPY scripts scripts
-# RUN chmod +x scripts
 
 USER $AIRFLOW_UID
-# USER airflow
+
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-# RUN pip3 install pgcli --only-binary psycopg2
-
-# USER ${AIRFLOW_UID}

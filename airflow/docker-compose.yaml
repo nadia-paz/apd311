@@ -1,8 +1,14 @@
 version: '3'
+
+x-spark-common: &spark-common
+  image: bitnami/spark:latest
+  volumes:
+    - ./jobs:/opt/bitnami/spark/jobs
+
 x-airflow-common:
   &airflow-common
   build: .
-  image: ${AIRFLOW_IMAGE_NAME:-airflow-gcp:latest}
+  image: ${AIRFLOW_IMAGE_NAME:-airflow-plus:latest}
   environment:
     &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
@@ -19,8 +25,8 @@ x-airflow-common:
     - ./dags:/opt/airflow/dags
     - ./logs:/opt/airflow/logs
     - ./plugins:/opt/airflow/plugins
-    - ./config:/opt/airflow/config
-    # - ./scripts:/opt/airflow/scripts
+    - ./scripts:/opt/airflow/scripts
+    - ./lib:/opt/airflow/lib
     - ~/Documents/Zoomcapm/DE-zoomcamp/.gc/apd311.json:/.gc/apd311.json:ro
 
   user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-50000}"
@@ -31,6 +37,24 @@ x-airflow-common:
 
 # POSTGRES
 services:
+  spark-master:
+    <<: *spark-common
+    command: bin/spark-class org.apache.spark.deploy.master.Master
+    ports:
+      - "9090:8080"
+      - "7077:7077"
+
+  spark-worker:
+    <<: *spark-common
+    command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
+    depends_on:
+      - spark-master
+    environment:
+      SPARK_MODE: worker
+      SPARK_WORKER_CORES: 2
+      SPARK_WORKER_MEMORY: 1g
+      SPARK_MASTER_URL: spark://spark-master:7077
+
   postgres:
     image: postgres:13
     environment:

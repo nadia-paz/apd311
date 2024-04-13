@@ -6,16 +6,14 @@
 </details>
 
 
-<h2 style="color:#777;">2. Data Source and Aquisition</h2>
+<h2 style="color:#777;">2. Technology stack of the project</h2>
 <details><summary><i>Expand</i></summary>
 
 </details>
 
 <h2 style="color:#777;">3. Prerequisites</h2>
 <details><summary><i>Expand</i></summary>
-The project created on Ubuntu 20.04 with Python 3.11.
-To reproduce this project you need to have a Google Cloud Account (additional cost may apply). 
-You need to install Docker and Docker Compose.
+To reproduce this project you need to have a Google Cloud Account (additional cost may apply), have Docker and Docker Compose installed, have at least 10GB of free space to load docker images and start the project. 
 </details>
 
 <h2 style="color:#777;">4. Installations</h2>
@@ -63,19 +61,15 @@ export PATH="${HOME}/bin:${PATH}"
 
 </details>
 
-### Google Cloud SDK
+### Google Cloud SDK _- Optional_
 <details><summary><i>Expand</i></summary>
-
-Please, follow the official installation guide from [Google Cloud](https://cloud.google.com/sdk/docs/install)
+Google Cloud SDK will be installed automatically on project's Docker Image. If you'd like to install it locally as well, follow the official installation guide from [Google Cloud](https://cloud.google.com/sdk/docs/install)
 
 </details>
 
-
-
-
 <h2 style="color:#777;">5. Google Cloud Credentials</h2>
 
-To use Google Cloud SDK, Terraform you need to provide the access to your Google Cloud Account. Follow the steps below to create a service account and create an API key.
+To use Google Cloud SDK, Terraform and run the project's code, you need to provide the access to your Google Cloud Account. With the steps below, you can prepare your GCP account for the project. 
 
 <details><summary><i>Expand</i></summary>
 
@@ -83,10 +77,10 @@ To use Google Cloud SDK, Terraform you need to provide the access to your Google
 2. Enable API's for your project:
     * [Identity and Access Management (IAM) API](https://console.cloud.google.com/apis/library/iam.googleapis.com)
     * [IAM Service Account Credentials API](https://console.cloud.google.com/apis/library/iamcredentials.googleapis.com)
-    Compute Engine API
-* Cloud Dataproc API
-* BigQuery API
-* Bigquery Storage API
+    * Compute Engine API
+    * Cloud Dataproc API
+    * BigQuery API
+    * Bigquery Storage API
 
 3. Navigate to __IAM & Admin__ -> Service Accounts.
 4. Create a new service account for the project. Make sure to add the following roles into it:
@@ -95,32 +89,21 @@ To use Google Cloud SDK, Terraform you need to provide the access to your Google
     * Storage Admin
     * Storage Object Admin
     * Dataproc Administrator
-
-    ---
-    * Artifact Registry Reader
-    * Artifact Registry Writer
-    * Cloud Run Developer
-    * Cloud SQL Admin
-    * Service Account Token Creator
     * Owner
 
-    -
-    Compute Engine API
-
 5. Click on the name of the service account and move to keys. Create a `*.json` file with a key, download it, and rename as `apd311.json`. In the root dicrectory create a folder `.gc` and move the key file into that folder:
+
 ```bash
 mkdir ~/.gc
 mv apd311.json ~/.gc/apd311.json
 ```
-Alternativaly, you can store it in your preffered location and replace the location to the file in the code.
+Alternativaly, you can store it in your preffered location and replace the location to the file everywhere in the code.
+
+_The next 2 steps are valid only for those, who choose to install Google SDK locally:_
 6. To add the environment variable with your credentials run in the terminal:
 
 ```bash
 export GOOGLE_APPLICATION_CREDENTIALS="~/.gc/apd311.json"
-```
-or,
-```bash
-export GOOGLE_APPLICATION_CREDENTIALS="<path/to/your/service-account-authkeys>.json"
 ```
 If you don't want to manually add credentials path each session, you can add the code above into `~/.bashrc` file.
 7. Authentificate Google SDK.
@@ -129,7 +112,43 @@ gcloud auth application-default login
 ```
 </details>
 
-<h2 style="color:#777;">6. Setup the Google Cloud Storage and BigQuery Data set </h2>
+<h2 style="color:#777;">6. Recreate the project </h2>
+
+1. Clone the project from GitHub
+```bash
+https://github.com/nadia-paz/apd311.git
+```
+or download it by clicking on Code -> Download ZIP
+
+2. In the terminal move into the project's folder `apd311`.
+
+**Note!!!** Bucket and project names are unique accross Google CLoud Platform. You won't be able to create and/or use the same variables that I do. For reproducing the code you'll need to replace     `GCP_PROJECT_ID` and `GCP_GCS_BUCKET` values with your own.
+
+3. Run the commands `terraform init` and `terraform apply`. 
+
+4. Move back to the airflow directoy `cd .. && cd airflow`
+
+5. In addition to `dags` directory, you'll need to create `config`, `jobs`, `lib`, `plugins`, and`logs`. 
+```bash
+mkdir config jobs lib plugins logs
+```
+
+6. Now we are ready to start our Docker. First, we need to rebuild the official airflow image to fit our needs. Then we are ready to start **Airflow**. In the `airflow` directory step by step run the commands:
+```bash
+sudo docker build . -t airflow-plus:latest
+docker-compose up airflow-init
+docker-compose up -d
+```
+
+With the command `docker ps` check if all containers started. You should see:
+* airflow-webserver
+* airflow-scheduler
+* spark-worker
+* spark-master
+* postgres
+
+7. If everything runs OK, we can login into Airflow Web. In the browser go to `http://localhost:8080`, enter the *login*: `airflow`, and *password*: `airflow`. 
+
 
 
 

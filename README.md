@@ -94,6 +94,7 @@ To use Google Cloud SDK, Terraform you need to provide the access to your Google
     * Compute Admine
     * Storage Admin
     * Storage Object Admin
+    * Dataproc Administrator
 
     ---
     * Artifact Registry Reader

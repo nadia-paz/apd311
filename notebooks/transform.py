@@ -115,4 +115,31 @@ df = df.withColumn(
     .otherwise('other')
 )
 
+# new column how many days case was open: status date - created date
+df = df.withColumn(
+    'case_duration_days', 
+    F.datediff(
+        F.to_date(F.col('status_date')),
+        F.to_date(F.col('created_date'))
+        )
+)
 
+# if the status is not closed yet, replace with null
+df = df.withColumn(
+    'case_duration_days', 
+    F.when(F.col('status_desc') == 'Closed', F.col('case_duration_days'))\
+    .otherwise(None)
+)
+
+# reorder columns
+
+# drop 'updated_date' - > not needed for analysis
+# drop 'location_x', 'location_y' -> state plane coordinates
+
+new_order = ['request_id', 'status_desc', 'type_desc', 'method_received', 'method_received_desc',
+       'created_date', 'month_created', 'year_created', 'status_date', 'case_duration_days',
+        'location_county', 'location_city', 'location_zip_code',
+       'location_lat', 'location_long', 
+       ]
+
+df = df.select(new_order)

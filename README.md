@@ -106,8 +106,18 @@ To use Google Cloud SDK, Terraform you need to provide the access to your Google
     -
     Compute Engine API
 
-5. Click on the name of the service account and move to keys. Create a `*.json` file with a key, download it and store in the secure location.
+5. Click on the name of the service account and move to keys. Create a `*.json` file with a key, download it, and rename as `apd311.json`. In the root dicrectory create a folder `.gc` and move the key file into that folder:
+```bash
+mkdir ~/.gc
+mv apd311.json ~/.gc/apd311.json
+```
+Alternativaly, you can store it in your preffered location and replace the location to the file in the code.
 6. To add the environment variable with your credentials run in the terminal:
+
+```bash
+export GOOGLE_APPLICATION_CREDENTIALS="~/.gc/apd311.json"
+```
+or,
 ```bash
 export GOOGLE_APPLICATION_CREDENTIALS="<path/to/your/service-account-authkeys>.json"
 ```
@@ -116,7 +126,6 @@ If you don't want to manually add credentials path each session, you can add the
 ```bash
 gcloud auth application-default login
 ```
-
 </details>
 
 <h2 style="color:#777;">6. Setup the Google Cloud Storage and BigQuery Data set </h2>

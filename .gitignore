@@ -3,6 +3,7 @@
 
 *.json
 *.txt
+*.jar
 
 # Exceptions
 !terraform/

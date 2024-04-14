@@ -147,12 +147,29 @@ With the command `docker ps` check if all containers started. You should see:
 * spark-master
 * postgres
 
-7. If everything runs OK, we can login into Airflow Web. In the browser go to `http://localhost:8080`, enter the *login*: `airflow`, and *password*: `airflow`. 
+7. If everything runs OK, we can login into Airflow Web. In the browser go to `http://localhost:8080`, enter the *login*: `airflow`, and *password*: `airflow`. On the home page you will see 3 DAGs (Directed Acyclic Graphs), that organize tasks together. Activate all DAGs by clicking on toggle button next to them.
 
+### DAGs and Tasks
 
+#### `upload_spark_file`
+Runs -> once on April, 19 2024, not scheduled.
+Contains one task `spark_job_file_task` that uploads the file `spark_job.py` to Google Cloud Storage.
 
+<img src="./images/upload_spark_file.png"  width="300" height="100">
 
+#### `pipeline`
+* Runs -> scheduled to run every week on Sunday at midnight GMT. 
+* Start date: April, 19 2024. 
+* End date: June 30, 2024
+* Tasks:
+    * `save_data_task` -> extracts data from [City of Austin Open Data Portal](https://data.austintexas.gov/Utilities-and-City-Services/Austin-311-Public-Data) and loads it onto GCS bucket.
+    * `create_cluster_task` -> creates Dataproc cluster on Google Cloud Platform
+    * `submit_spark_job_task` -> submits Spark Job into Dataproc cluster.
+    * `delete_cluster_task` -> deletes Dataproc cluster
 
+<img src="./images/pipeline.png" alt="Tasks">
+
+#### `create_tables`
 
 
 

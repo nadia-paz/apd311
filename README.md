@@ -215,6 +215,11 @@ After the tasks finish their run, you can move to BigQuery to work with data. Lo
 
 <h2 style="color:#777;">7. Analyze data with Looker </h2>
 
+To create your own report with [Looker Studio](https://lookerstudio.google.com/), click __Create__ , pick **Data Source** -> BigQuery -> Project Name -> Dataset `apd311` -> Table `main_table`, press **Create report**. Make sure that you *change all location fields to Geo data type*. Press the `ABC` icon next to `location_sity`, `location_county`, `location_zip` fields, and the `123` icon next to `location_lat` and `location_long`, pick `GEO`. Create a dashboard.
+
+[My Analytical Dashboard](https://lookerstudio.google.com/s/rHWz0UUdnNo)
+
+<img src="./images/dashboard.png" alt="Tasks">
 
 
 <h2 style="color:#777;">8. Clean resources </h2>

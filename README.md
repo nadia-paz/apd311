@@ -1,6 +1,7 @@
 # Austin Service Explorer
 
 <h2 style="color:#777;">1. Project's description</h2>
+
 This is a Data Engineering project created as a part of Data Engineering Zoomcamp. The main goal of the project is to seamlessly transfer data from the source into data analytics dashboard using data engineering tools.
 The project aims to leverage the wealth of data available from the City of Austin Open Data portal. Specifically, it collects over 1.8 million service requests originating from the City of Austin and its metropolitan area, sourced from the CSR production system. This dataset spans back to 01/03/2014 and is updated daily at 4:00 am. The data encapsulates various service requests made by residents, covering issues ranging from park maintenance to broken traffic lights and beyond.
 
@@ -21,13 +22,19 @@ Transformation:
 
 Load:
 * The transformed data is saved on GCS bucket and loaded into BigQuery as an external table. With the help of SQL query I created as well a table that is partitioned by date, using monthly intervals, and clustered by the method, the service request was received. This transformations help to optimize the SQL queries performance.
-</details>
 
 
 <h2 style="color:#777;">2. Technology stack of the project</h2>
-<details><summary><i>Expand</i></summary>
 
-</details>
+* Infrastracture as Code: Terraform
+* Data Lake: Google Cloud Storage
+* Data Warehouse: BigQuery
+* Orchestration: Airflow
+* Data Transformations: Spark
+* Serverless Cluster Service: Dataproc
+* Containerization: Docker
+* Data Visualisation: Looker
+
 
 <h2 style="color:#777;">3. Prerequisites</h2>
 <details><summary><i>Expand</i></summary>
@@ -130,7 +137,7 @@ gcloud auth application-default login
 ```
 </details>
 
-<h2 style="color:#777;">6. Recreate the project </h2>
+<h2 style="color:#777;">6. Reproduce the project </h2>
 
 1. Clone the project from GitHub
 ```bash
@@ -188,6 +195,36 @@ Contains one task `spark_job_file_task` that uploads the file `spark_job.py` to 
 <img src="./images/pipeline.png" alt="Tasks">
 
 #### `create_tables`
+* Runs -> scheduled to run every week on Sunday at 4:00 AM GMT. 
+* Start date: April, 19 2024. 
+* End date: June 30, 2024
+* Tasks:
+    * _for external table:_
+        * `create_stage_dataset_task` 
+        * `create_stage_table_task`
+    * _for partitioned table:_
+        * `create_main_dataset_task`
+        * `create_main_table_task`
+
+<img src="./images/create_tables.png" alt="Tasks">
+
+To run dags you can manually trigger them in the order: 
+* `upload_spark_file` >> `pipeline` >> `create_tables`
+
+After the tasks finish their run, you can move to BigQuery to work with data. Look for dataset `apd311`, and table `main_table`.
+
+<h2 style="color:#777;">7. Analyze data with Looker </h2>
 
 
 
+<h2 style="color:#777;">8. Clean resources </h2>
+
+1. In the terminal move to the `terraform` directory and run the command `terraform destroy`
+2. Go to [Google Cloud Storge](https://console.cloud.google.com/storage) and manually delete Dataproc clusters.
+3. Move to `airflow` directory and disconnect `Docker` by runnining command
+```bash
+docker-compose down --volume -rmi
+```
+`--volume` and `-rmi` are optional flags to remove all volumes (`--volume`) and images (`-rmi`) from your computer.
+
+4. Delete the project's directory.

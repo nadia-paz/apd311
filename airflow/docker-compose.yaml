@@ -27,7 +27,7 @@ x-airflow-common:
     - ./plugins:/opt/airflow/plugins
     - ./scripts:/opt/airflow/scripts
     - ./lib:/opt/airflow/lib
-    - ~/Documents/Zoomcapm/DE-zoomcamp/.gc/apd311.json:/.gc/apd311.json:ro
+    - ~/.gc/apd311.json:/.gc/apd311.json:ro
 
   user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-50000}"
   depends_on:

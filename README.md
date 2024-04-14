@@ -1,8 +1,26 @@
-# dez-project
+# Austin Service Explorer
 
 <h2 style="color:#777;">1. Project's description</h2>
-<details><summary><i>Expand</i></summary>
+This is a Data Engineering project created as a part of Data Engineering Zoomcamp. The main goal of the project is to seamlessly transfer data from the source into data analytics dashboard using data engineering tools.
+The project aims to leverage the wealth of data available from the City of Austin Open Data portal. Specifically, it collects over 1.8 million service requests originating from the City of Austin and its metropolitan area, sourced from the CSR production system. This dataset spans back to 01/03/2014 and is updated daily at 4:00 am. The data encapsulates various service requests made by residents, covering issues ranging from park maintenance to broken traffic lights and beyond.
 
+Purpose:
+The project attempts to collect the city's service requests data and prepare it for the data analysys, and deliver actionable insights. I use Airflow as an orchestration tool that coordinates the workflow: data extraction, preprocessing, storage, and transformation. 
+
+Extracting:
+* The data was retrieved through API requests.
+
+Preprocessing: 
+* The correct data types were assined to the collected data, performed formatting, dropped non-meaningful columns and redundant information.
+
+Storage: 
+* The preprocessed data is stored on the Google Cloud Storage bucket as a collection multiple _parquet_ files.
+
+Transformation: 
+* With the help of PySpark the data was cleaned and standartized to ensure its quality. For example, values like _Austin, AUSTIN, AUS and austin_ replced with only one standard _Austin_, all errors in city names and locations were removed. In data transformation step I performed as well feature engineering and created new columns, for example: generalizing types of service requests, bringing them down to phone, email, web, app, and other; created the column that calculates how long the case was opened, extracted the values like month and year.
+
+Load:
+* The transformed data is saved on GCS bucket and loaded into BigQuery as an external table. With the help of SQL query I created as well a table that is partitioned by date, using monthly intervals, and clustered by the method, the service request was received. This transformations help to optimize the SQL queries performance.
 </details>
 
 

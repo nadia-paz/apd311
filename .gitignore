@@ -1,5 +1,8 @@
 *terraform*
 *credentials*
+airflow/logs
+airflow/plugins
+airflow/config
 
 *.json
 *.txt

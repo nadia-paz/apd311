@@ -10,3 +10,4 @@ airflow/config
 
 # Exceptions
 !terraform/
+!requirements.txt

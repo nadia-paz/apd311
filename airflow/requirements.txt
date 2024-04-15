@@ -1,0 +1,2 @@
+pyarrow
+apache-airflow==2.8.2

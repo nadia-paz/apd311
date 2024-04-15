@@ -1,0 +1,14 @@
+*terraform*
+*credentials*
+airflow/logs
+airflow/plugins
+airflow/config
+
+*.json
+*.txt
+*.jar
+*.pyc
+
+# Exceptions
+!terraform/
+!requirements.txt

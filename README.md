@@ -147,16 +147,18 @@ or download it by clicking on Code -> Download ZIP
 
 2. In the terminal move into the project's folder `apd311`.
 
-**Note!!!** Bucket and project names are unique accross Google CLoud Platform. You won't be able to create and/or use the same variables that I do. For reproducing the code you'll need to replace     `GCP_PROJECT_ID` and `GCP_GCS_BUCKET` values with your own.
+**Note!!!** Bucket and project names are unique accross Google Cloud Platform. You won't be able to create and/or use the same variables that I do. For reproducing the code you'll need to replace     `GCP_PROJECT_ID` and `GCP_GCS_BUCKET` values with your own. Put your caustom values in `docker-compose.yaml` file located in `airflow` directory (section `x-airflow-common:` -> `environment`). If you stored and named the secret key other than `~/.gc/apd311.json`, you need to add custom value in `volumes` section as well (In the code lines: 11,12,14,15,30)
+ and then `terraform`.
 
-3. Run the commands `terraform init` and `terraform apply`. 
+3. In the terminal move to Run the commands `terraform init` and `terraform apply`. 
 
 4. Move back to the airflow directoy `cd .. && cd airflow`
 
-5. In addition to `dags` directory, you'll need to create `config`, `jobs`, `lib`, `plugins`, and`logs`. 
+5. In addition to `dags` directory, you'll need to create `config`, `plugins`, and`logs`. 
 ```bash
-mkdir config jobs lib plugins logs
+mkdir config plugins logs
 ```
+**Note for Linux users!!!** You might need to do some work around before starting Docker. Run in terminal `echo -e "AIRFLOW_UID=$(id -u)"` and in the file `.env` replace the default value of `AIRFLOW_UID` with the one you've got in the terminal.
 
 6. Now we are ready to start our Docker. First, we need to rebuild the official airflow image to fit our needs. Then we are ready to start **Airflow**. In the `airflow` directory step by step run the commands:
 ```bash
@@ -168,23 +170,25 @@ docker-compose up -d
 With the command `docker ps` check if all containers started. You should see:
 * airflow-webserver
 * airflow-scheduler
-* spark-worker
-* spark-master
+* airflow-init
 * postgres
+
 
 7. If everything runs OK, we can login into Airflow Web. In the browser go to `http://localhost:8080`, enter the *login*: `airflow`, and *password*: `airflow`. On the home page you will see 3 DAGs (Directed Acyclic Graphs), that organize tasks together. Activate all DAGs by clicking on toggle button next to them.
 
 ### DAGs and Tasks
+All DAGs are scheduled to run.  You can manually trigger them as well in the order: 
+* `upload_spark_file` >> `pipeline` >> `create_tables`
 
 #### `upload_spark_file`
-Runs -> once on April, 19 2024, not scheduled.
+Runs -> once on April, 12 2024, not scheduled.
 Contains one task `spark_job_file_task` that uploads the file `spark_job.py` to Google Cloud Storage.
 
 <img src="./images/upload_spark_file.png"  width="300" height="100">
 
 #### `pipeline`
 * Runs -> scheduled to run every week on Sunday at midnight GMT. 
-* Start date: April, 19 2024. 
+* Start date: April, 12 2024. 
 * End date: June 30, 2024
 * Tasks:
     * `save_data_task` -> extracts data from [City of Austin Open Data Portal](https://data.austintexas.gov/Utilities-and-City-Services/Austin-311-Public-Data) and loads it onto GCS bucket.
@@ -196,7 +200,7 @@ Contains one task `spark_job_file_task` that uploads the file `spark_job.py` to 
 
 #### `create_tables`
 * Runs -> scheduled to run every week on Sunday at 4:00 AM GMT. 
-* Start date: April, 19 2024. 
+* Start date: April, 12 2024. 
 * End date: June 30, 2024
 * Tasks:
     * _for external table:_
@@ -207,9 +211,6 @@ Contains one task `spark_job_file_task` that uploads the file `spark_job.py` to 
         * `create_main_table_task`
 
 <img src="./images/create_tables.png" alt="Tasks">
-
-To run dags you can manually trigger them in the order: 
-* `upload_spark_file` >> `pipeline` >> `create_tables`
 
 After the tasks finish their run, you can move to BigQuery to work with data. Look for dataset `apd311`, and table `main_table`.
 
@@ -228,7 +229,7 @@ To create your own report with [Looker Studio](https://lookerstudio.google.com/)
 2. Go to [Google Cloud Storge](https://console.cloud.google.com/storage) and manually delete Dataproc clusters.
 3. Move to `airflow` directory and disconnect `Docker` by runnining command
 ```bash
-docker-compose down --volume -rmi
+docker-compose down --rmi "all"  --volumes
 ```
 `--volume` and `-rmi` are optional flags to remove all volumes (`--volume`) and images (`-rmi`) from your computer.
 

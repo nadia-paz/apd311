@@ -1,60 +1,42 @@
 version: '3'
 
-x-spark-common: &spark-common
-  image: bitnami/spark:latest
-  volumes:
-    - ./jobs:/opt/bitnami/spark/jobs
-
 x-airflow-common:
   &airflow-common
   build: .
   image: ${AIRFLOW_IMAGE_NAME:-airflow-plus:latest}
   environment:
     &airflow-common-env
+
+    ###### CUSTOM VARS ####
+    GCP_PROJECT_ID: 'apd311'
+    GCP_GCS_BUCKET: "apd311"
+    ###
+    GOOGLE_APPLICATION_CREDENTIALS: /.gc/apd311.json
+    AIRFLOW_CONN_GOOGLE_CLOUD_DEFAULT: 'google-cloud-platform://?extra__google_cloud_platform__key_path=/.gc/apd311.json'
+    #######################
+
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
     AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
     AIRFLOW__CORE__FERNET_KEY: ''
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__SCHEDULER__MIN_FILE_PROCESS_INTERVAL: 10
-    GOOGLE_APPLICATION_CREDENTIALS: /.gc/apd311.json
-    AIRFLOW_CONN_GOOGLE_CLOUD_DEFAULT: 'google-cloud-platform://?extra__google_cloud_platform__key_path=/.gc/apd311.json'
-    GCP_PROJECT_ID: 'apd311'
-    GCP_GCS_BUCKET: "apd311"
+
   volumes:
     - ./dags:/opt/airflow/dags
     - ./logs:/opt/airflow/logs
     - ./plugins:/opt/airflow/plugins
-    - ./scripts:/opt/airflow/scripts
-    - ./lib:/opt/airflow/lib
+    ### custom key
     - ~/.gc/apd311.json:/.gc/apd311.json:ro
 
   user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-50000}"
   depends_on:
     postgres:
-      # condition: service_healthy
-      condition: service_started
+      # condition: service_healthy - service_started
+      condition: service_healthy
 
 # POSTGRES
 services:
-  spark-master:
-    <<: *spark-common
-    command: bin/spark-class org.apache.spark.deploy.master.Master
-    ports:
-      - "9090:8080"
-      - "7077:7077"
-
-  spark-worker:
-    <<: *spark-common
-    command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
-    depends_on:
-      - spark-master
-    environment:
-      SPARK_MODE: worker
-      SPARK_WORKER_CORES: 2
-      SPARK_WORKER_MEMORY: 1g
-      SPARK_MASTER_URL: spark://spark-master:7077
-
   postgres:
     image: postgres:13
     environment:
@@ -74,7 +56,6 @@ services:
   airflow-webserver:
     <<: *airflow-common
     command: webserver
-    # entrypoint: ./scripts/entrypoint.sh
     ports:
       - 8080:8080
     healthcheck:

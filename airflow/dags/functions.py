@@ -68,14 +68,15 @@ def preprocess_data(data_json):
     Parameters:
         data_json: list of dictionaries from API request
     """
-    # create a table
-    # schema with data types throws errors
-    # data types changed throgh casting below
+
     if len(data_json[0]) < 20:
         raise KeyError
     py_table = pa.Table.from_pylist(data_json)
     print(py_table.column_names)
-    # drop not needed columns
+
+    # # drop not needed columns
+    # # lower speed, more chance to finish without KeyError
+
     # cols_to_drop = [
     #         'sr_location',
     #         'sr_location_council_district',
@@ -87,6 +88,8 @@ def preprocess_data(data_json):
     # for col in cols_to_drop:
     #     if col in py_table.column_names:
     #         py_table = py_table.drop_columns(col)
+
+    # # higher speed processin, there is a slight chance for the KeyError
     py_table = py_table.drop_columns([
             'sr_location',
             # 'sr_location_council_district',
@@ -178,6 +181,7 @@ def save_data(offset=1, limit = 100_000):
             os.remove(local_file)
             n += 1
         except KeyError:
+            # in case the data in the 1st row is incomplete - > scan again from the next row
             print(KeyError)
             offset = offset + 1
             print("Offset increased by 1, offset =", offset)

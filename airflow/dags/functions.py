@@ -18,16 +18,6 @@ from google.cloud import storage
 from google.cloud import dataproc_v1 as dataproc
 from google.oauth2 import service_account
 
-# spark
-# import pyspark
-from pyspark.sql import SparkSession
-from pyspark.conf import SparkConf
-from pyspark.context import SparkContext
-from pyspark.sql import types
-from pyspark.sql import functions as F
-
-
-
 
 #### VARS #####
 GOOGLE_APPLICATION_CREDENTIALS = os.environ['GOOGLE_APPLICATION_CREDENTIALS']
@@ -41,12 +31,6 @@ pyspark_uri = f"{GCP_GCS_BUCKET}/code/{spark_filename}"
 region = 'us-west1'
 cluster_name = 'apd-cluster'
 
-PYSPARK_JOB = {
-    "reference":{"project_id":GCP_PROJECT_ID},
-    "placement":{"cluster_name":cluster_name},
-    "pyspark_job":{"main_python_file_uri":pyspark_uri}
-
-}
 
 #######
 

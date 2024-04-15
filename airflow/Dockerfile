@@ -4,18 +4,7 @@ ENV AIRFLOW_HOME=/opt/airflow
 
 USER root
 
-# from
-# https://airflow.apache.org/docs/docker-stack/build.html#example-of-adding-airflow-provider-package-and-apt-package
-RUN apt-get update \
-  && apt-get install vim -qqq \
-  && apt-get install -y --no-install-recommends \
-         openjdk-17-jre-headless \
-  && apt-get autoremove -yqq --purge \
-  && apt-get clean \
-  && rm -rf /var/lib/apt/lists/*
-
-ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
-RUN export JAVA_HOME
+RUN apt-get update -qq && apt-get install vim -qqq
 
 SHELL ["/bin/bash", "-o", "pipefail", "-e", "-u", "-x", "-c"]
 

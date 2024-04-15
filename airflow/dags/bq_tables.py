@@ -27,7 +27,7 @@ with DAG(
     dag_id="create_tables_01",
     default_args=default_args,
     start_date=datetime(2024, 4, 12),
-    # every Sunday at 00:00
+    # every Sunday at 04:00 AM GMT
     end_date=datetime(2024, 6, 30),
     schedule='0 4 * * SUN',
     catchup=False

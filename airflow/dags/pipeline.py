@@ -38,7 +38,7 @@ Creates  DAGs.
 with DAG(
     dag_id='upload_spark_file',
     default_args=default_args,
-    start_date=datetime(2024, 4, 12),
+    start_date=datetime(2024, 4, 11),
     schedule='@once',
     catchup=False
 ) as dag1:

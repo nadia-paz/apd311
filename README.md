@@ -181,7 +181,7 @@ All DAGs are scheduled to run.  You can manually trigger them as well in the ord
 * `upload_spark_file` >> `pipeline` >> `create_tables`
 
 #### `upload_spark_file`
-Runs -> once on April, 12 2024, not scheduled.
+Runs -> once on April, 11 2024, not scheduled.
 Contains one task `spark_job_file_task` that uploads the file `spark_job.py` to Google Cloud Storage.
 
 <img src="./images/upload_spark_file.png"  width="300" height="100">

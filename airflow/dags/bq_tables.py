@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from airflow import DAG
 from airflow.providers.google.cloud.operators.bigquery import (
@@ -24,9 +24,9 @@ default_args = {
 }
 
 with DAG(
-    dag_id="create_tables_02",
+    dag_id="create_tables_01",
     default_args=default_args,
-    start_date=datetime(2024, 4, 10),
+    start_date=datetime(2024, 4, 12),
     # every Sunday at 00:00
     end_date=datetime(2024, 6, 30),
     schedule='0 4 * * SUN',

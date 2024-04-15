@@ -34,7 +34,7 @@ cluster_name = 'apd-cluster'
 
 #######
 
-def get_json(ti, offset=1, limit = 100_000):
+def get_json(offset=1, limit = 100_000):
     while True:
         url = 'https://data.austintexas.gov/resource/xwdj-i9he.json'
         
@@ -54,7 +54,7 @@ def get_json(ti, offset=1, limit = 100_000):
             yield data_json
             if len(data_json) < limit:
                 print('Exit from len(data) with offset', offset)
-                ti.xcom_push(key='offset', value=offset)
+                # ti.xcom_push(key='offset', value=offset)
                 break
             else:
                 offset += limit
@@ -71,9 +71,22 @@ def preprocess_data(data_json):
     # create a table
     # schema with data types throws errors
     # data types changed throgh casting below
-
+    if len(data_json[0]) < 20:
+        raise KeyError
     py_table = pa.Table.from_pylist(data_json)
+    print(py_table.column_names)
     # drop not needed columns
+    # cols_to_drop = [
+    #         'sr_location',
+    #         'sr_location_council_district',
+    #         'sr_location_lat_long', 
+    #         'sr_location_map_tile', 
+    #         'sr_location_map_page',
+    #         'sr_location_street_number',
+    #         'sr_location_street_name']
+    # for col in cols_to_drop:
+    #     if col in py_table.column_names:
+    #         py_table = py_table.drop_columns(col)
     py_table = py_table.drop_columns([
             'sr_location',
             # 'sr_location_council_district',
@@ -86,8 +99,7 @@ def preprocess_data(data_json):
         py_table = py_table.drop_columns('sr_location_street_number')
     if 'sr_location_council_district' in py_table.column_names:
         py_table = py_table.drop_columns('sr_location_council_district')
-    
-        
+      
     # rename columns, remove sr_ prefix
     cols = py_table.column_names
     cols = [col[3:] if col!='sr_number' else 'request_id' for col in cols]
@@ -135,27 +147,46 @@ def upload_to_gcs(bucket_name, object_name, pq_file):
     blob = bucket.blob(object_name)
     blob.upload_from_filename(pq_file)
 
-def save_data(ti, offset=1, limit = 100_000):
+def save_data(offset=1, limit = 100_000):
     # extract
     n = 1
-    for data in get_json(ti, offset, limit):
+    has_data = True
+    while has_data:
+        try:
+            geneartor = get_json(offset, limit)
+            #for data in geneartor:
+            data = next(geneartor)
+            print(offset)
+            print("Data Length:", len(data))
+            #data = [*data, *j]
+            if len(data) == 0:
+                has_data = False
+                break
+            # preprocess
+            table = preprocess_data(data)
+            offset = offset + limit
+            print("Data Processed, offset increased by 100 000")
+                
+            # write to local file
+            filename = f'data_{n:02d}.parquet'
+            object_name = f"raw/{filename}"
+            local_file = f"{AIRFLOW_HOME}/{filename}"
+            # save table into a file
+            pq.write_table(table, local_file)
+            # upload to gcs
+            upload_to_gcs(GCP_GCS_BUCKET, object_name, local_file)
+            os.remove(local_file)
+            n += 1
+        except KeyError:
+            print(KeyError)
+            offset = offset + 1
+            print("Offset increased by 1, offset =", offset)
+            # continue
+        except StopIteration:
+            print(StopIteration)
+            has_data = False
+            break
         
-        #data = [*data, *j]
-        # preprocess
-        table = preprocess_data(data)
-        #table = pa.Table.from_pylist(data)
-        # write to local file
-        filename = f'data_{n:02d}.parquet'
-        object_name = f"raw/{filename}"
-        local_file = f"{AIRFLOW_HOME}/{filename}"
-        # save table into a file
-        pq.write_table(table, local_file)
-        # upload to gcs
-
-        upload_to_gcs(GCP_GCS_BUCKET, object_name, local_file)
-        os.remove(local_file)
-        n += 1
-    # ti.xcom_push(f"gs://{bucket_name}/raw/*")
 
 def spark_job_file():
     object_name=f"code/{spark_filename}"

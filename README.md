@@ -2,11 +2,10 @@
 
 <h2 style="color:#777;">1. Project's description</h2>
 
-This is a Data Engineering project created as a part of Data Engineering Zoomcamp. The main goal of the project is to seamlessly transfer data from the source into data analytics dashboard using data engineering tools.
-The project aims to leverage the wealth of data available from the City of Austin Open Data portal. Specifically, it collects over 1.8 million service requests originating from the City of Austin and its metropolitan area, sourced from the CSR production system. This dataset spans back to 01/03/2014 and is updated daily at 4:00 am. The data encapsulates various service requests made by residents, covering issues ranging from park maintenance to broken traffic lights and beyond.
+This project is a part of the Data Engineering Zoomcamp. The main goal of the project is to seamlessly transfer data from the source into a data analytics dashboard using data engineering tools. The project uses the City of Austin Open Data portal to collect over 1.8 million service requests originating from the city and its metropolitan area. These requests date back to 01/03/2014 and are updated daily at 4:00 am. The dataset contains various service requests made by residents, covering issues ranging from park maintenance to broken traffic lights and beyond.
 
-Purpose:
-The project attempts to collect the city's service requests data and prepare it for the data analysys, and deliver actionable insights. I use Airflow as an orchestration tool that coordinates the workflow: data extraction, preprocessing, storage, and transformation. 
+The project attempts to collect the city's service requests data, clean, validate and prepare it for data analysis. Airflow is used as a main orchestration tool to coordinate a workflow: data extraction, preprocessing, storage, and transformation.
+
 
 Extracting:
 * The data was retrieved through API requests.
@@ -18,10 +17,10 @@ Storage:
 * The preprocessed data is stored on the Google Cloud Storage bucket as a collection multiple _parquet_ files.
 
 Transformation: 
-* With the help of PySpark the data was cleaned and standartized to ensure its quality. For example, values like _Austin, AUSTIN, AUS and austin_ replced with only one standard _Austin_, all errors in city names and locations were removed. In data transformation step I performed as well feature engineering and created new columns, for example: generalizing types of service requests, bringing them down to phone, email, web, app, and other; created the column that calculates how long the case was opened, extracted the values like month and year.
+* With the help of PySpark, the data was cleaned and standardized to ensure its quality. For example, values like _Austin, AUSTIN, AUS, and austin_ were replaced with only one standard _Austin_, and all errors in city names and locations were removed. In the data transformation step, I performed as well feature engineering and created new columns, for example: generalizing types of service requests, bringing them down to phone, email, web, app, and other; created the column that calculates how long the case was opened, extracted the values like month and year.
 
 Load:
-* The transformed data is saved on GCS bucket and loaded into BigQuery as an external table. With the help of SQL query I created as well a table that is partitioned by date, using monthly intervals, and clustered by the method, the service request was received. This transformations help to optimize the SQL queries performance.
+* The transformed data has been saved on the GCS bucket and then loaded into BigQuery as an external table. With the help of SQL query I created as well a table that is partitioned by date, using monthly intervals, and clustered by the method, the service request was received. These transformations help to optimize the SQL queries' performance.
 
 
 <h2 style="color:#777;">2. Technology stack of the project</h2>
@@ -38,12 +37,12 @@ Load:
 
 <h2 style="color:#777;">3. Prerequisites</h2>
 <details><summary><i>Expand</i></summary>
-To reproduce this project you need to have a Google Cloud Account (additional cost may apply), have Docker and Docker Compose installed, have at least 10GB of free space to load docker images and start the project. 
+To reproduce this project you need to have a Google Cloud Account (additional cost may apply), have Docker and Docker Compose installed, have at least 5GB of free disk space to load docker images and start the project. 
 </details>
 
 <h2 style="color:#777;">4. Installations</h2>
 
-Please, make sure that you have all needed installations and install the missing ones following the instructions provided below.
+Please ensure that you have all the necessary installations and install any missing ones by following the instructions provided below.
 
 ### Docker
 <details><summary><i>Expand</i></summary>
@@ -94,7 +93,7 @@ Google Cloud SDK will be installed automatically on project's Docker Image. If y
 
 <h2 style="color:#777;">5. Google Cloud Credentials</h2>
 
-To use Google Cloud SDK, Terraform and run the project's code, you need to provide the access to your Google Cloud Account. With the steps below, you can prepare your GCP account for the project. 
+To use Google Cloud SDK and Terraform, you need to grant access to your Google Cloud Account. Follow the steps below to prepare your GCP account for the project.
 
 <details><summary><i>Expand</i></summary>
 
@@ -122,7 +121,7 @@ To use Google Cloud SDK, Terraform and run the project's code, you need to provi
 mkdir ~/.gc
 mv apd311.json ~/.gc/apd311.json
 ```
-Alternativaly, you can store it in your preffered location and replace the location to the file everywhere in the code.
+Alternativaly, you can store it in your preffered location and replace the path to the file in the `docker-compose` and `.env` files.
 
 _The next 2 steps are valid only for those, who choose to install Google SDK locally:_
 6. To add the environment variable with your credentials run in the terminal:
@@ -147,20 +146,23 @@ or download it by clicking on Code -> Download ZIP
 
 2. In the terminal move into the project's folder `apd311`.
 
-**Note!!!** Bucket and project names are unique accross Google Cloud Platform. You won't be able to create and/or use the same variables that I do. For reproducing the code you'll need to replace     `GCP_PROJECT_ID` and `GCP_GCS_BUCKET` values with your own. Put your caustom values in `docker-compose.yaml` file located in `airflow` directory (section `x-airflow-common:` -> `environment`). If you stored and named the secret key other than `~/.gc/apd311.json`, you need to add custom value in `volumes` section as well (In the code lines: 11,12,14,15,30)
- and then `terraform`.
+**Note!!!** GCP buckets and project names are globally unique. You won't be able to create and/or use the same variables that I do. For reproducing the code you'll need to replace     `GCP_PROJECT_ID` and `GCP_GCS_BUCKET` values with your own. Put your caustom values in `docker-compose.yaml` file located in `airflow` directory (section `x-airflow-common:` -> `environment`). If you stored and named the secret key other than `~/.gc/apd311.json`, you need to add custom value in `volumes` section as well (In the code lines: 11,12,14,15,30). You can move to the next step only after you updated the information.
 
-3. In the terminal move to Run the commands `terraform init` and `terraform apply`. 
+3. Move to `terraform` directory. Run the commands `terraform init` and `terraform apply`. 
 
 4. Move back to the airflow directoy `cd .. && cd airflow`
 
-5. In addition to `dags` directory, you'll need to create `config`, `plugins`, and`logs`. 
+5. In addition to `dags` directory, you'll need to create directories `plugins` and`logs`. 
 ```bash
-mkdir config plugins logs
+mkdir plugins logs
 ```
-**Note for Linux users!!!** You might need to do some work around before starting Docker. Run in terminal `echo -e "AIRFLOW_UID=$(id -u)"` and in the file `.env` replace the default value of `AIRFLOW_UID` with the one you've got in the terminal.
+**Note for Linux users!!!** You might need to do some workaround before starting Docker. Run in terminal 
+```bash
+echo $(id -u)
+```
+In the `.env`file replace the default numeric value of `AIRFLOW_UID` with the one you've got in the terminal.
 
-6. Now we are ready to start our Docker. First, we need to rebuild the official airflow image to fit our needs. Then we are ready to start **Airflow**. In the `airflow` directory step by step run the commands:
+6. Now we are ready to start our Docker. First, we need to rebuild the official airflow image to make it fit our needs. Then we are ready to start **Airflow**. In the `airflow` directory step by step run the commands:
 ```bash
 sudo docker build . -t airflow-plus:latest
 docker-compose up airflow-init
@@ -177,7 +179,7 @@ With the command `docker ps` check if all containers started. You should see:
 7. If everything runs OK, we can login into Airflow Web. In the browser go to `http://localhost:8080`, enter the *login*: `airflow`, and *password*: `airflow`. On the home page you will see 3 DAGs (Directed Acyclic Graphs), that organize tasks together. Activate all DAGs by clicking on toggle button next to them.
 
 ### DAGs and Tasks
-All DAGs are scheduled to run.  You can manually trigger them as well in the order: 
+All DAGs are scheduled to run. Alternatively, you can manually trigger them in the order: 
 * `upload_spark_file` >> `pipeline` >> `create_tables`
 
 #### `upload_spark_file`
@@ -216,7 +218,7 @@ After the tasks finish their run, you can move to BigQuery to work with data. Lo
 
 <h2 style="color:#777;">7. Analyze data with Looker </h2>
 
-To create your own report with [Looker Studio](https://lookerstudio.google.com/), click __Create__ , pick **Data Source** -> BigQuery -> Project Name -> Dataset `apd311` -> Table `main_table`, press **Create report**. Make sure that you *change all location fields to Geo data type*. Press the `ABC` icon next to `location_sity`, `location_county`, `location_zip` fields, and the `123` icon next to `location_lat` and `location_long`, pick `GEO`. Create a dashboard.
+To create your own report with [Looker Studio](https://lookerstudio.google.com/), click __Create__ , pick **Data Source** -> BigQuery -> Project Name -> Dataset `apd311` -> Table `main_table`, press **Create report**. Make sure that you *change all location fields to Geo data type*. Press the `ABC` icon next to `location_sity`, `location_county`, `location_zip` fields, and the `123` icon next to `location_lat` and `location_long`. Pick `GEO`. Create a dashboard.
 
 [My Analytical Dashboard](https://lookerstudio.google.com/s/rHWz0UUdnNo)
 

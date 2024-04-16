@@ -25,6 +25,10 @@ Load:
 
 <h2 style="color:#777;">2. Technology stack of the project</h2>
 
+<img src="./images/tech_stack.png" alt="Tasks">
+<br>
+<br>
+
 * Infrastracture as Code: Terraform
 * Data Lake: Google Cloud Storage
 * Data Warehouse: BigQuery
